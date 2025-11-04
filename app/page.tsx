@@ -1,24 +1,65 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/kxgypjnn"; // <— your endpoint
+
 export default function Home() {
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Detect ?sent=1 and auto-hide after 4s
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.location.search.includes("sent=1")) {
-      setSent(true);
-      const timer = setTimeout(() => setSent(false), 4000);
-      return () => clearTimeout(timer);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault(); // stop page navigation
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+        }),
+      });
+
+      if (res.ok) {
+        setSent(true);
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+        setTimeout(() => setSent(false), 4000);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(
+          (data?.error && String(data.error)) ||
+            "Something went wrong sending your message."
+        );
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="text-center pt-24 pb-32 px-6">
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
@@ -65,11 +106,11 @@ export default function Home() {
           Have a question or collab idea? Drop us a message below.
         </p>
 
-        {/* Animated success alert */}
+        {/* Success / Error banners */}
         <AnimatePresence>
           {sent && (
             <motion.div
-              key="sent-banner"
+              key="sent"
               initial={{ opacity: 0, y: -8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -79,18 +120,28 @@ export default function Home() {
               ✅ Message sent successfully! We’ll get back to you soon.
             </motion.div>
           )}
+          {error && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: -8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.25 }}
+              className="bg-red-600/20 text-red-400 border border-red-600 rounded-md px-4 py-3 max-w-lg mx-auto mb-6"
+            >
+              ❌ {error}
+            </motion.div>
+          )}
         </AnimatePresence>
 
-        <form
-          action="https://formspree.io/f/kxgypjnn"
-          method="POST"
-          className="max-w-lg mx-auto grid gap-3 sm:grid-cols-2"
-        >
+        <form onSubmit={handleSubmit} className="max-w-lg mx-auto grid gap-3 sm:grid-cols-2">
           <input
             type="text"
             name="name"
             placeholder="Name"
             className="bg-zinc-900 rounded-md px-3 py-2 sm:col-span-2"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
           />
           <input
@@ -98,22 +149,34 @@ export default function Home() {
             name="email"
             placeholder="Email"
             className="bg-zinc-900 rounded-md px-3 py-2 sm:col-span-2"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
+          />
+          <input
+            type="text"
+            name="subject"
+            placeholder="Subject"
+            className="bg-zinc-900 rounded-md px-3 py-2 sm:col-span-2"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
           />
           <textarea
             name="message"
             placeholder="Message"
             rows={5}
             className="bg-zinc-900 rounded-md px-3 py-2 sm:col-span-2"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             required
           />
-          {/* spam honeypot */}
-          <input type="text" name="_gotcha" className="hidden" />
-          {/* redirect after submit */}
-          <input type="hidden" name="_redirect" value="https://vtw.clothing/?sent=1" />
           <div className="sm:col-span-2">
-            <Button type="submit" className="w-full sm:w-auto bg-white text-black hover:bg-zinc-300">
-              Send Message
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full sm:w-auto bg-white text-black hover:bg-zinc-300 disabled:opacity-70"
+            >
+              {loading ? "Sending..." : "Send Message"}
             </Button>
           </div>
         </form>
