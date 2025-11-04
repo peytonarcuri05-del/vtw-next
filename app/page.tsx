@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/kxgypjnn"; // <— your endpoint
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xgvpjnnn"; // <— your endpoint
 
 export default function Home() {
   const [sent, setSent] = useState(false);
