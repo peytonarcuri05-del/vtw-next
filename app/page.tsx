@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   const [sent, setSent] = useState(false);
 
-  // Detect success redirect (?sent=1) and auto-hide after 4s
+  // Detect ?sent=1 and auto-hide after 4s
   useEffect(() => {
     if (typeof window !== "undefined" && window.location.search.includes("sent=1")) {
       setSent(true);
@@ -82,7 +82,7 @@ export default function Home() {
         </AnimatePresence>
 
         <form
-          action="https://formspree.io/f/https://formspree.io/f/xgvpjnnn"
+          action="https://formspree.io/f/kxgypjnn"
           method="POST"
           className="max-w-lg mx-auto grid gap-3 sm:grid-cols-2"
         >
@@ -109,7 +109,7 @@ export default function Home() {
           />
           {/* spam honeypot */}
           <input type="text" name="_gotcha" className="hidden" />
-          {/* redirect back with success flag */}
+          {/* redirect after submit */}
           <input type="hidden" name="_redirect" value="https://vtw.clothing/?sent=1" />
           <div className="sm:col-span-2">
             <Button type="submit" className="w-full sm:w-auto bg-white text-black hover:bg-zinc-300">
